@@ -5,7 +5,7 @@
       <li v-for="log in logs" v-bind:key="log.id">
         <span class="log-date">{{ log.startDate.toLocaleDateString('en-us') }}</span> 
         <span class="log-title">{{log.title}} ({{ log.owner }})</span>
-        <span class="log-details-button"><button @click="logDetails(log.id)">view details</button></span>
+        <span class="log-details-button"><button @click="toggleDetails(log.id)">view details</button></span>
         <div v-if="isCurrentLog(log.id)">
           <ul v-if="detailsLoaded">
             <li v-for="fight in details[detailId].fights" v-bind:key="fight.name + fight.start_time">{{ fight.name }}</li>
@@ -39,9 +39,14 @@ export default {
     },
   }),
   methods: {
-    logDetails: function(id) {
-      this.$store.commit("updateLogId", id)
-      this.$store.dispatch("loadDetails", id)
+    toggleDetails: function(id) {
+      if (this.detailId === '') {
+        this.$store.commit("updateLogId", id)
+        this.$store.dispatch("loadDetails", id)
+      } else {
+        this.$store.commit("clearLogId")
+      }
+      
     },
     isCurrentLog: function(id) {
       return (this.detailId === id)

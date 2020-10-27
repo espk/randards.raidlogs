@@ -47,6 +47,9 @@ export default new Vuex.Store({
         return 0;
       })
     },
+    clearLogId(state) {
+      state.detailId = ''
+    },
     updateLogId(state, payload) {
       state.detailId = payload
     },

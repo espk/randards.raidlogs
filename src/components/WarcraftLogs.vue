@@ -1,8 +1,20 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <ul>
-      <li v-for="log in logs" v-bind:key="log.id">
+  <div>
+    <div><a href="#" @click="setList('raids')">Raids</a> | <a href="#" @click="setList('dungeons')">Dungeons</a></div>
+    <ul v-show="currentList === 'raids'">
+      <li v-for="log in raids" v-bind:key="log.id">
+        <span class="log-date">{{ log.startDate.toLocaleDateString('en-us') }}</span> 
+        <span class="log-title">{{log.title}} ({{ log.owner }})</span>
+        <span class="log-details-button"><button @click="toggleDetails(log.id)">view details</button></span>
+        <div v-if="isCurrentLog(log.id)">
+          <ul v-if="detailsLoaded">
+            <li v-for="fight in details[detailId].fights" v-bind:key="fight.name + fight.start_time">{{ fight.name }}</li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+    <ul v-show="currentList === 'dungeons'">
+      <li v-for="log in dungeons" v-bind:key="log.id">
         <span class="log-date">{{ log.startDate.toLocaleDateString('en-us') }}</span> 
         <span class="log-title">{{log.title}} ({{ log.owner }})</span>
         <span class="log-details-button"><button @click="toggleDetails(log.id)">view details</button></span>
@@ -21,11 +33,13 @@ import store from "../data/store";
 import { mapState } from "vuex";
 
 export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  },
+  name: 'WarcraftLogs',
   store,
+  data: function () {
+    return {
+      currentList: 'raids'
+    }
+  },
   computed: mapState({
     logs: state => state.logs, 
     detailId: state => state.detailId, 
@@ -36,7 +50,7 @@ export default {
     },
     raids: function(state) {
       return state.logs.filter(l => (!(l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+'))))
-    },
+    }
   }),
   methods: {
     toggleDetails: function(id) {
@@ -50,6 +64,9 @@ export default {
     },
     isCurrentLog: function(id) {
       return (this.detailId === id)
+    },
+    setList(listType) {
+      this.currentList = listType
     }
   },
   mounted: function() {

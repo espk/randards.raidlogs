@@ -54,7 +54,7 @@ export default {
   }),
   methods: {
     toggleDetails: function(id) {
-      if (this.detailId === '') {
+      if (this.detailId !== id) {
         this.$store.commit("updateLogId", id)
         this.$store.dispatch("loadDetails", id)
       } else {

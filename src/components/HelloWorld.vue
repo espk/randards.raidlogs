@@ -26,7 +26,18 @@ export default {
     msg: String
   },
   store,
-  computed: mapState(["logs", "detailId", "details", "detailsLoaded"]),
+  computed: mapState({
+    logs: state => state.logs, 
+    detailId: state => state.detailId, 
+    details: state => state.details, 
+    detailsLoaded: state => state.detailsLoaded,
+    dungeons: function(state) {
+      return state.logs.filter(l => (l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+')))  
+    },
+    raids: function(state) {
+      return state.logs.filter(l => (!(l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+'))))
+    },
+  }),
   methods: {
     logDetails: function(id) {
       this.$store.commit("updateLogId", id)

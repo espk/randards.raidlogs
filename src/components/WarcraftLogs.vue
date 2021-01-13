@@ -68,6 +68,10 @@ export default {
         this.$store.commit("clearLogId")
       }
     },
+    membersForLog: function(logId) {
+      console.log(this.details[logId]);
+      return this.details[logId].friendlies.filter(f => !['pet','npc','boss'].includes(f.type.toLowerCase()))
+    },
     isCurrentLog: function(id) {
       return (this.detailId === id)
     },

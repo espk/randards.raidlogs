@@ -10,7 +10,7 @@ export default {
   },
 
   getCretanLogs() {
-    return axios.get(this.apiRoot + '/reports/guild/The%20Collective/Whisperwind/US' + this.apiKey);
+    return axios.get(this.apiRoot + '/reports/guild/Evil%20SuperPoweredKitties/Whisperwind/US' + this.apiKey);
   },
 
   getLogDetail(id) {

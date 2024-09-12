@@ -86,6 +86,24 @@ export default new Vuex.Store({
         .catch(error => {
           console.log(error)
         })
+
+      logsApi.getForcasLogs()
+        .then(result => {
+          result.data.forEach(log => log.owner = 'forcas')
+          result.data.forEach(log => { 
+            if (log.zone === 25) { 
+              log.title = 'Mythic+ Dungeons'
+            } 
+            else if (log.zone === 26) {
+              log.title = 'Castle Nathria'
+            }
+          })
+          result.data.filter(log => log.zone !== -1).forEach(log => context.commit('addLog', log))
+          context.commit('sortLogs')
+        })
+        .catch(error => {
+          console.log(error)
+        })
     },
     loadDetails(context, id) {
       

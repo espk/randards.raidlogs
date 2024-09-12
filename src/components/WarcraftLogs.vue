@@ -5,6 +5,15 @@
       | 
       <button @click="setList('dungeons')" :class="isActive('dungeons')">Dungeons</button>
     </div>
+    <div class="owner-filter">
+      <button @click="setFilter('all')" :class="isActiveFilter('all')">all</button> 
+      .
+      <button @click="setFilter('cretan')" :class="isActiveFilter('cretan')">cretan</button> 
+      .
+      <button @click="setFilter('guillak')" :class="isActiveFilter('guillak')">guillak</button> 
+      .
+      <button @click="setFilter('forcas')" :class="isActiveFilter('forcas')">forcas</button> 
+    </div>
     <ul class="logs-list">
       <li v-for="log in currentList" v-bind:key="log.id" class="log-item">
         <span class="log-date" @click="navigateToLog(log.id)">{{ formatDate(log.startDate) }}</span> 
@@ -20,6 +29,28 @@
         </div>
       </li>
     </ul>
+    
+    <div class="archive">
+      <div class="archive-toggle">
+        Archive <button @click="toggleArchiveDetails()">{{(archiveVisible) ? "hide" : "show" }}</button>
+      </div>
+      <ul class="logs-list" v-if="archiveVisible">
+        <li v-for="log in currentArchive" v-bind:key="log.id" class="log-item">
+          <span class="log-date" @click="navigateToLog(log.id)">{{ formatDate(log.startDate) }}</span> 
+          <span class="log-title" @click="navigateToLog(log.id)">{{log.title}} (<span class="owner" v-bind:class="ownerClass(log.owner)">{{ log.owner.toLowerCase() }}</span>)</span>
+          <span class="log-details-button"><button @click="toggleDetails(log.id)">toggle details</button></span>
+          <div v-if="isCurrentLog(log.id)" class="log-detail">
+            <ul v-if="detailsLoaded" class="log-members">
+              <li v-for="member in detailsMembers" v-bind:key="member.name" v-bind:class="member.type.toLowerCase()">{{ member.name }}</li>
+            </ul>
+            <ul v-if="detailsLoaded" class="log-fights">
+              <li v-for="fight in currentFights" v-bind:key="fight.name + fight.start_time" :class="bossClass(fight)">{{ fight.name }}</li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <br />
   </div>
 </template>
 
@@ -32,7 +63,10 @@ export default {
   store,
   data: function () {
     return {
-      currentCategory: 'raids'
+      currentCategory: 'raids', 
+      currentFilter: 'all',
+      archiveDate: new Date('2024-08-23T00:00:00'),
+      archiveVisible: false,
     }
   },
   computed: mapState({
@@ -41,10 +75,24 @@ export default {
     details: state => state.details, 
     detailsLoaded: state => state.detailsLoaded,
     dungeons: function(state) {
-      return state.logs.filter(l => (l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+')))  
+      return state.logs.filter(l => (l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+')))
+                       .filter(f => f.owner.toLowerCase() === this.currentFilter || this.currentFilter === 'all')
+                       .filter(d => d.startDate > this.archiveDate)
     },
     raids: function(state) {
       return state.logs.filter(l => (!(l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+')) && l.title.toLowerCase() !== 'unknown zone'))
+                       .filter(f => f.owner.toLowerCase() === this.currentFilter || this.currentFilter === 'all')
+                       .filter(d => d.startDate > this.archiveDate)
+    },
+    dungeonArchivess: function(state) {
+      return state.logs.filter(l => (l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+')))
+                       .filter(f => f.owner.toLowerCase() === this.currentFilter || this.currentFilter === 'all')
+                       .filter(d => d.startDate <= this.archiveDate)
+    },
+    raidArchives: function(state) {
+      return state.logs.filter(l => (!(l.title.toLowerCase().includes('dungeon') || l.title.toLowerCase().includes('mythic+')) && l.title.toLowerCase() !== 'unknown zone'))
+                       .filter(f => f.owner.toLowerCase() === this.currentFilter || this.currentFilter === 'all')
+                       .filter(d => d.startDate <= this.archiveDate)
     },
     detailsMembers: function() {
       return this.details[this.detailId].friendlies.filter(f => !['pet','npc','boss'].includes(f.type.toLowerCase()))
@@ -52,6 +100,12 @@ export default {
     currentList: function() {
       if (this.currentCategory === 'dungeons') return this.dungeons
       if (this.currentCategory === 'raids') return this.raids
+
+      return []
+    },
+    currentArchive: function() {
+      if (this.currentCategory === 'dungeons') return this.dungeonArchivess
+      if (this.currentCategory === 'raids') return this.raidArchives
 
       return []
     },
@@ -68,6 +122,9 @@ export default {
         this.$store.commit("clearLogId")
       }
     },
+    toggleArchiveDetails: function() {
+      this.archiveVisible = !this.archiveVisible;
+    },
     membersForLog: function(logId) {
       console.log(this.details[logId]);
       return this.details[logId].friendlies.filter(f => !['pet','npc','boss'].includes(f.type.toLowerCase()))
@@ -77,6 +134,9 @@ export default {
     },
     setList(listType) {
       this.currentCategory = listType
+    },
+    setFilter(filter) {
+      this.currentFilter = filter
     },
     formatDate(date) {
       let year = date.getFullYear().toString()
@@ -91,6 +151,12 @@ export default {
       if (toon.toLowerCase() === 'guillak')
         return 'warlock'
 
+      if (toon.toLowerCase() === 'forcas')
+        return 'demon-hunter'
+
+      if (toon.toLowerCase() === 'all')
+        return 'all'
+
       return ''
     },
     bossClass(fight) {
@@ -98,6 +164,9 @@ export default {
     },
     isActive(type) {
       return (type === this.currentCategory) ? "active" : ""
+    },
+    isActiveFilter(filter) {
+      return ((filter === this.currentFilter) ? "active " : "" )+ this.ownerClass(filter)
     },
     navigateToLog(id) {
       window.open("https://www.warcraftlogs.com/reports/" + id, '_blank');
@@ -143,7 +212,6 @@ button:focus {
   border-bottom: 1px solid transparent;
 }
 .log-filter button.active {
-  color: #9482C9;
   border-bottom: 1px solid #9482C9;
 }
 .log-filter button:hover, .log-filter button.active:hover {
@@ -151,6 +219,32 @@ button:focus {
   border-bottom: 1px solid #76a;
 }
 .log-filter button:focus {
+  outline: 0;
+}
+
+.owner-filter {
+  margin: -28px 10px 10px 0;
+  text-align: right;
+  border-bottom: 1px solid #222;
+}
+.owner-filter button {
+  background-color: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 10px;
+}
+.owner-filter button.all {
+  color: #ccc;
+}
+
+.owner-filter button.active {
+  background: #222;
+}
+.owner-filter button:hover, .owner-filter button.active:hover {
+  color: #76a;
+}
+.owner-filter button:focus {
   outline: 0;
 }
 ul.logs-list {
@@ -228,5 +322,25 @@ li.log-item:hover {
 }
 .boss-kill {
   color: #191;
+}
+.archive {
+  margin-top: 20px;
+  
+}
+.archive-toggle {
+  border: 1px solid #555;
+  padding: 5px 10px;
+  margin-right: 10px;
+}
+.archive-toggle button {
+  float: right;
+  border-radius: 8px;
+  background-color: #222;
+  color: #ddd;
+  border: 1px solid #000;
+  margin-bottom: 2px;
+  margin-right: 18px;
+  vertical-align: middle;
+  padding: 4px 16px;
 }
 </style>

@@ -9,6 +9,10 @@ export default {
     return axios.get(this.apiRoot + '/reports/user/guillak' + this.apiKey);
   },
 
+  getForcasLogs() {
+    return axios.get(this.apiRoot + '/reports/user/Forcas11954' + this.apiKey);
+  },
+
   getCretanLogs() {
     return axios.get(this.apiRoot + '/reports/guild/Evil%20SuperPoweredKitties/Whisperwind/US' + this.apiKey);
   },
